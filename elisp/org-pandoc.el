@@ -36,7 +36,7 @@ end tell'" app)))
 (defun org-pandoc-detect-type (infile)
   (if (eq 0 (call-process
              "grep" nil nil nil
-             "<meta name=\"generator\" content=\"Org-mode\"/>" "/tmp/foo.html"))
+             "<meta name=\"generator\" content=\"Org-mode\"/>" infile))
       'roundtrip
     'markdown))
 
@@ -88,6 +88,7 @@ end tell'" app)))
 
 
 (defun org-pandoc-roundtrip-read (infile)
+  (message "%s" infile)
   (let ((html-buffer (generate-new-buffer "*pandoc-tmp*"))
         (source-buffer (generate-new-buffer "*pandoc-in*")))
     (with-current-buffer html-buffer
@@ -124,7 +125,7 @@ end tell'" app)))
                         '((markdown . org-pandoc-markdown-write)
                           (org-mode . org-pandoc-roundtrip-write)))))
     (when exporter
-      (funcall exporter outfile))))
+      (funcall (cdr exporter) outfile))))
 
 
 (defun org-pandoc-save ()
@@ -156,8 +157,8 @@ end tell'" app)))
     (setq inapp (current-window)))
   (let* ((type (org-pandoc-detect-type infile))
          (importer (assq type
-                         '((markdown . org-pandoc-read-markdown)
-                           (roundtrip . org-pandoc-roundtrip-import))))
+                         '((markdown . org-pandoc-markdown-read)
+                           (roundtrip . org-pandoc-roundtrip-read))))
          (buf (and importer
                    (funcall (cdr importer) infile))))
     (with-current-buffer buf
