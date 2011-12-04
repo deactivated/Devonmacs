@@ -99,13 +99,13 @@ end tell'" app)))
 
 
 (defun org-pandoc-markdown-write (outfile)
-  (let ((f (or
-            (buffer-file-name)
-            (make-temp-file "pandoc"))))
-    (write-file f)
-    (call-process "pandoc" nil nil nil
-                  "-s" "-c" "file:///Users/me/Dropbox/pandoc4.css"
-                  "-f" "markdown" "-t" "html" "-o" outfile f)))
+  (let ((f (make-temp-file "pandoc")))
+    (write-region nil nil f nil 1)
+    (unwind-protect
+        (call-process "pandoc" nil nil nil
+                      "-s" "-c" "file:///Users/me/Dropbox/pandoc4.css"
+                      "-f" "markdown" "-t" "html" "-o" outfile f)
+      (delete-file f))))
 
 
 (defun org-pandoc-markdown-read (infile)
@@ -119,7 +119,7 @@ end tell'" app)))
 
 (defun org-pandoc-write (outfile)
   (let ((exporter (assq major-mode
-                        '((markdown . org-pandoc-markdown-write)
+                        '((markdown-mode . org-pandoc-markdown-write)
                           (org-mode . org-pandoc-roundtrip-write)))))
     (when exporter
       (funcall (cdr exporter) outfile))))
@@ -127,17 +127,23 @@ end tell'" app)))
 
 (defun org-pandoc-save ()
   (interactive)
+  (if (buffer-file-name)
+      (save-buffer))
   (if org-pandoc-orig-file
       (org-pandoc-write org-pandoc-orig-file)
 
-    (let* ((name (org-pandoc-name))
-           (outfile (make-temp-file "pandoc"))
-           (record (progn
-                     (org-pandoc-write outfile)
-                     (dvm-create-record
-                      name "html" nil outfile))))
-      (setq org-pandoc-orig-file (aref record 1))
-      (org-pandoc-mode))))
+    (let ((name (org-pandoc-name))
+          (outfile (make-temp-file "pandoc")))
+      (unwind-protect
+          (let ((record (progn
+                          (org-pandoc-write outfile)
+                          (dvm-create-record
+                           name "html" nil outfile))))
+            (setq org-pandoc-orig-file (aref record 1))
+            (org-pandoc-mode))
+        (delete-file outfile))))
+
+  (set-buffer-modified-p nil))
 
 
 (defun org-pandoc-commit ()
