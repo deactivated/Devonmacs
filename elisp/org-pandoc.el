@@ -140,7 +140,7 @@ end tell'" app)))
                           (dvm-create-record
                            name "html" nil outfile))))
             (setq org-pandoc-orig-file (aref record 1))
-            (org-pandoc-mode))
+            (org-pandoc-mode 1))
         (delete-file outfile))))
 
   (set-buffer-modified-p nil))
@@ -150,12 +150,13 @@ end tell'" app)))
   (interactive)
   (when org-pandoc-orig-app
     (org-pandoc-save)
-    (focus-window org-pandoc-orig-app)
+    (when org-pandoc-orig-app
+      (focus-window org-pandoc-orig-app))
     (kill-buffer)
     (delete-frame)))
 
 
-(defun org-pandoc-open (infile &optional inapp)
+(defun org-pandoc-open (infile &optional inname inapp)
   (when (null inapp)
     (setq inapp (current-window)))
   (let* ((type (org-pandoc-detect-type infile))
@@ -164,14 +165,17 @@ end tell'" app)))
                            (roundtrip . org-pandoc-roundtrip-read))))
          (buf (and importer
                    (funcall (cdr importer) infile))))
-    (with-current-buffer buf
-      (org-pandoc-mode)
-      (set (make-local-variable 'org-pandoc-orig-file) infile)
-      (set (make-local-variable 'org-pandoc-orig-app) inapp))
+    (when buf
+      (with-current-buffer buf
+        (rename-buffer
+         (format "*Pandoc: %s*" inname) t)
+        (org-pandoc-mode)
+        (set (make-local-variable 'org-pandoc-orig-file) infile)
+        (set (make-local-variable 'org-pandoc-orig-app) inapp))
 
-    (with-selected-frame (make-frame)
-      (switch-to-buffer buf)  
-      (select-frame-set-input-focus (selected-frame)))))
+      (with-selected-frame (make-frame)
+        (switch-to-buffer buf)  
+        (select-frame-set-input-focus (selected-frame))))))
 
 
 (define-minor-mode org-pandoc-mode
