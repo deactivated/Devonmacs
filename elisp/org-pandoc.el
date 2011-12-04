@@ -77,18 +77,15 @@ end tell'" app)))
 
 
 (defun org-pandoc-roundtrip-write (outfile)
-  (let ((source-buffer (current-buffer))
-        (html-buffer (generate-new-buffer "*pandoc-tmp*")))
-    (org-export-as-html nil nil org-pandoc-export-args
-                        html-buffer)
-    (org-pandoc-roundtrip-append html-buffer source-buffer)
-    (with-current-buffer html-buffer
-      (write-file outfile)
-      (kill-buffer))))
+  (let ((source-buffer (current-buffer)))
+    (with-temp-file outfile
+      (let ((html-buffer (current-buffer)))
+        (with-current-buffer source-buffer
+          (org-export-as-html nil nil org-pandoc-export-args html-buffer)
+          (org-pandoc-roundtrip-append html-buffer source-buffer))))))
 
 
 (defun org-pandoc-roundtrip-read (infile)
-  (message "%s" infile)
   (let ((html-buffer (generate-new-buffer "*pandoc-tmp*"))
         (source-buffer (generate-new-buffer "*pandoc-in*")))
     (with-current-buffer html-buffer
