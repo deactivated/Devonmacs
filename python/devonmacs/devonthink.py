@@ -1,4 +1,3 @@
-import tempfile, subprocess
 from Pymacs import lisp
 from appscript import *
 
@@ -45,11 +44,11 @@ def create_record(name, type, content=None, fn=None):
     }
 
     if fn:
-        content = open(fn).read()
+        content = open(fn, "rb").read()
 
     dtpo = app('DEVONthink Pro.app')
     record = dtpo.create_record_with({
-        k.name: name,
+        k.name: name.decode('utf8'),
         k.type: types[type],
-        sources[type]: content})
+        sources[type]: content.decode('utf8')})
     return record.uuid.get(), record.path.get()

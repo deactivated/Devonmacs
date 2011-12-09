@@ -79,6 +79,7 @@ end tell'" app)))
 (defun org-pandoc-roundtrip-write (outfile)
   (let ((source-buffer (current-buffer)))
     (with-temp-file outfile
+      (setq buffer-file-coding-system 'utf-8-unix)
       (let ((html-buffer (current-buffer)))
         (with-current-buffer source-buffer
           (org-export-as-html nil nil org-pandoc-export-args html-buffer)
@@ -89,7 +90,7 @@ end tell'" app)))
   (let ((html-buffer (generate-new-buffer "*pandoc-tmp*"))
         (source-buffer (generate-new-buffer "*pandoc-in*")))
     (with-current-buffer html-buffer
-      (insert-file-contents-literally infile)
+      (insert-file-contents infile)
       (org-pandoc-roundtrip-restore html-buffer source-buffer)
       (kill-buffer))
     (with-current-buffer source-buffer
@@ -138,10 +139,14 @@ end tell'" app)))
           (let ((record (progn
                           (org-pandoc-write outfile)
                           (dvm-create-record
-                           name "html" nil outfile))))
+                           (encode-coding-string name 'utf-8)
+                           "html" nil outfile))))
+            (rename-buffer (format "*Pandoc: %s*" name) t)
             (setq org-pandoc-orig-file (aref record 1))
             (org-pandoc-mode 1))
-        (delete-file outfile))))
+        ;(delete-file outfile)
+        (message "%s" outfile)
+        )))
 
   (set-buffer-modified-p nil))
 
