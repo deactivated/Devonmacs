@@ -82,6 +82,7 @@ end tell'" app)))
       (setq buffer-file-coding-system 'utf-8-unix)
       (let ((html-buffer (current-buffer)))
         (with-current-buffer source-buffer
+          (setq buffer-file-coding-system 'utf-8-unix)
           (org-export-as-html nil nil org-pandoc-export-args html-buffer)
           (org-pandoc-roundtrip-append html-buffer source-buffer))))))
 
