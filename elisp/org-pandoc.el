@@ -45,7 +45,7 @@ end tell'" app)))
   (with-current-buffer (or buffer (current-buffer))
     (save-excursion
       (goto-char (point-min))
-      (re-search-forward "[#*\s]*")
+      (re-search-forward "#\\+TITLE: *\\|[#*\s]*")
       (buffer-substring-no-properties (point) (line-end-position)))))
 
 
