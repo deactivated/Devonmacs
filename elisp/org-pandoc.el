@@ -16,7 +16,12 @@
 (defvar org-pandoc-orig-app nil)
 (make-variable-buffer-local 'org-pandoc-orig-app)
 
-(defvar org-pandoc-export-args nil)
+(defvar org-pandoc-markdown-export-args nil
+  "List of command line arguments to pass to pandoc when
+exporting markdown documents.")
+
+(defvar org-pandoc-org-export-args nil
+  "Property list of export options for org-export.")
 
 
 (defun current-window ()
@@ -83,7 +88,7 @@ end tell'" app)))
       (let ((html-buffer (current-buffer)))
         (with-current-buffer source-buffer
           (setq buffer-file-coding-system 'utf-8-unix)
-          (org-export-as-html nil nil org-pandoc-export-args html-buffer)
+          (org-export-as-html nil nil org-pandoc-org-export-args html-buffer)
           (org-pandoc-roundtrip-append html-buffer source-buffer))))))
 
 
@@ -101,12 +106,13 @@ end tell'" app)))
 
 
 (defun org-pandoc-markdown-write (outfile)
-  (let ((f (make-temp-file "pandoc")))
+  (let* ((f (make-temp-file "pandoc"))
+         (pandoc-args (append 
+                       org-pandoc-markdown-export-args
+                `("-s" "-f" "markdown" "-t" "html" "-o" ,outfile ,f))))
     (write-region nil nil f nil 1)
     (unwind-protect
-        (call-process "pandoc" nil nil nil
-                      "-s" "-c" "file:///Users/me/Dropbox/pandoc4.css"
-                      "-f" "markdown" "-t" "html" "-o" outfile f)
+        (apply 'call-process "pandoc" nil nil nil pandoc-args)
       (delete-file f))))
 
 
