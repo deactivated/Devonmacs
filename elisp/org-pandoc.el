@@ -158,6 +158,10 @@ end tell'" app)))
 (defun org-pandoc-commit ()
   (interactive)
   (org-pandoc-save)
+  (org-pandoc-abort))
+
+(defun org-pandoc-abort ()
+  (interactive)
   (let (buf (current-buffer))
     (if org-pandoc-orig-app
         (progn
@@ -165,7 +169,6 @@ end tell'" app)))
           (kill-buffer buf)
           (delete-frame))
       (kill-buffer buf))))
-
 
 (defun org-pandoc-open (infile &optional inname inapp)
   (when (null inapp)
@@ -223,7 +226,8 @@ end tell'" app)))
   " pandoc"
   ;; The minor mode bindings.
   '(([remap save-buffer] . org-pandoc-save)
-    ("\C-c\C-c" . org-pandoc-commit))
+    ("\C-c\C-s" . org-pandoc-commit)
+    ("\C-c\C-q" . org-pandoc-abort))
   :group 'pandoc)
 
 
