@@ -145,21 +145,20 @@ end tell'" app)))
             (rename-buffer (format "*Pandoc: %s*" name) t)
             (setq org-pandoc-orig-file (aref record 1))
             (org-pandoc-mode 1))
-        ;(delete-file outfile)
-        (message "%s" outfile)
-        )))
-
+        (delete-file outfile))))
   (set-buffer-modified-p nil))
 
 
 (defun org-pandoc-commit ()
   (interactive)
-  (when org-pandoc-orig-app
-    (org-pandoc-save)
-    (when org-pandoc-orig-app
-      (focus-window org-pandoc-orig-app))
-    (kill-buffer)
-    (delete-frame)))
+  (org-pandoc-save)
+  (let (buf (current-buffer))
+    (if org-pandoc-orig-app
+        (progn
+          (focus-window org-pandoc-orig-app)
+          (kill-buffer buf)
+          (delete-frame))
+      (kill-buffer buf))))
 
 
 (defun org-pandoc-open (infile &optional inname inapp)
@@ -182,6 +181,29 @@ end tell'" app)))
       (with-selected-frame (make-frame)
         (switch-to-buffer buf)  
         (select-frame-set-input-focus (selected-frame))))))
+
+
+(defun org-pandoc-new (&optional mode inapp)
+  (interactive)
+  (when (null mode)
+    (setq mode 'org-mode))
+
+  (let* ((buf-name (loop for n upfrom 0
+                         for name = (format "*Pandoc: Untitled%s*"
+                                            (if (= n 0) "" (format " (%d)" n)))
+                         while (get-buffer name)
+                         finally return name))
+         (buf (get-buffer-create buf-name)))
+    (with-current-buffer buf
+      (funcall mode)
+      (org-pandoc-mode 1)
+      (set (make-local-variable 'org-pandoc-orig-app) inapp))
+    (if inapp
+        (with-selected-frame (make-frame)
+          (switch-to-buffer buf)
+          (select-frame-set-input-focus (selected-frame)))
+      (switch-to-buffer buf))
+    buf))
 
 
 (define-minor-mode org-pandoc-mode
