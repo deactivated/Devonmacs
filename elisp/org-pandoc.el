@@ -54,6 +54,16 @@ end tell'" app)))
       (buffer-substring-no-properties (point) (line-end-position)))))
 
 
+(defun org-pandoc-document-tags (&optional buffer)
+  (with-current-buffer (or buffer (current-buffer))
+    (save-excursion
+      (goto-char (point-min))
+      (if (re-search-forward "#\\+FILETAGS: *" nil t)
+          (org-split-string
+           (buffer-substring-no-properties (point) (line-end-position)) ":")
+        '()))))
+
+
 (defun org-pandoc-roundtrip-append (html-buffer source-buffer)
   (with-current-buffer html-buffer
     (goto-char (point-max))

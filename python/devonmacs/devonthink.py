@@ -2,7 +2,8 @@ from Pymacs import lisp
 from appscript import *
 
 
-__all__ = ["quicksearch", "url", "create_record"]
+__all__ = ["quicksearch", "url", "create_record", "update_record",
+           "get_record", "append_tags"]
 
 
 def quicksearch(text):
@@ -31,7 +32,7 @@ def url(text):
 url.interaction = 'MSearch: '
 
 
-def create_record(name, type, content=None, fn=None):
+def create_record(name, type, content=None, fn=None, tags=()):
     sources = {
         "html": k.source,
         "rich": k.rich_text,
@@ -50,5 +51,31 @@ def create_record(name, type, content=None, fn=None):
     record = dtpo.create_record_with({
         k.name: name.decode('utf8'),
         k.type: types[type],
+        k.tags: tags,
         sources[type]: content.decode('utf8')})
     return record.uuid.get(), record.path.get()
+
+
+def update_record(uuid, **kwargs):
+    dtpo = app('DEVONthink Pro.app')
+    record = dtpo.get_record_with_uuid(uuid)
+    for k, v in kwargs.iteritems():
+        if hasattr(record, k):
+            getattr(record, k).set(v)
+
+
+def get_record(uuid):
+    keys = ["uuid", "name", "tags", "path"]
+
+    dtpo = app('DEVONthink Pro.app')
+    record = dtpo.get_record_with_uuid(uuid)
+
+    return [(k, getattr(record, k).get()) for k in keys]
+
+
+def append_tags(uuid, tags):
+    dtpo = app('DEVONthink Pro.app')
+    record = dtpo.get_record_with_uuid(uuid)
+
+    current_tags = record.tags.get()
+    record.tags.set(current_tags + tags)
