@@ -38,6 +38,17 @@ activate
 end tell'" app)))
 
 
+(defun org-pandoc-update-record (uuid rest)
+  (let ((pymacs-forget-mutability t))
+    (dvm-update-record uuid rest)))
+
+
+(defun org-pandoc-uuid (&optional buffer)
+  (with-current-buffer (or buffer (current-buffer))
+    (ignore-errors
+      (cadr (assoc "uuid" (dvm-get-record nil org-pandoc-orig-file))))))
+
+
 (defun org-pandoc-detect-type (infile)
   (if (eq 0 (call-process
              "grep" nil nil nil
@@ -143,6 +154,13 @@ end tell'" app)))
       (funcall (cdr exporter) outfile))))
 
 
+(defun org-pandoc-save-tags (&optional buffer)
+  (let ((tags (org-pandoc-document-tags buffer))
+        (uuid (org-pandoc-uuid buffer)))
+    (when uuid
+      (org-pandoc-update-record uuid `(("tags" ,tags))))))
+
+
 (defun org-pandoc-save ()
   (interactive)
   (if (buffer-file-name)
@@ -162,6 +180,7 @@ end tell'" app)))
             (setq org-pandoc-orig-file (aref record 1))
             (org-pandoc-mode 1))
         (delete-file outfile))))
+  (org-pandoc-save-tags)
   (set-buffer-modified-p nil))
 
 
@@ -169,6 +188,7 @@ end tell'" app)))
   (interactive)
   (org-pandoc-save)
   (org-pandoc-abort))
+
 
 (defun org-pandoc-abort ()
   (interactive)
@@ -179,6 +199,7 @@ end tell'" app)))
           (kill-buffer buf)
           (delete-frame))
       (kill-buffer buf))))
+
 
 (defun org-pandoc-open (infile &optional inname inapp)
   (when (null inapp)

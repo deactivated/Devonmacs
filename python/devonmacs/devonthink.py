@@ -56,21 +56,27 @@ def create_record(name, type, content=None, fn=None, tags=()):
     return record.uuid.get(), record.path.get()
 
 
-def update_record(uuid, **kwargs):
+def update_record(uuid, fields):
+    if not fields:
+        return
+
     dtpo = app('DEVONthink Pro.app')
     record = dtpo.get_record_with_uuid(uuid)
-    for k, v in kwargs.iteritems():
+    for k, v in fields:
         if hasattr(record, k):
             getattr(record, k).set(v)
 
 
-def get_record(uuid):
+def get_record(uuid=None, path=None):
     keys = ["uuid", "name", "tags", "path"]
 
     dtpo = app('DEVONthink Pro.app')
-    record = dtpo.get_record_with_uuid(uuid)
+    if uuid:
+        record = dtpo.get_record_with_uuid(uuid)
+    elif path:
+        record = next(iter(dtpo.lookup_records_with_path(path)))
 
-    return [(k, getattr(record, k).get()) for k in keys]
+    return [[key, getattr(record, key).get()] for key in keys]
 
 
 def append_tags(uuid, tags):
